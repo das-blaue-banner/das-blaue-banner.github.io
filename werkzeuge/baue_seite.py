@@ -44,7 +44,12 @@ EINLEITUNG = (
     "Winkeln Azeroths. Hier liegen alle Ausgaben zum Lesen und Mitnehmen bereit."
 )
 
-AKTUELLE_AUSGABE = re.compile(r"\\newcommand\{\\AktuelleAusgabe\}\{[^}]*\}")
+# Zeilen, die \AktuelleAusgabe festlegen, auch auskommentierte. Die Website setzt
+# jede Ausgabe selbst und hängt nicht davon ab, was in Overleaf gerade zur
+# Vorschau eingestellt ist.
+AKTUELLE_AUSGABE = re.compile(
+    r"^[ \t]*%*[ \t]*\\(?:(?:re)?newcommand\*?|def)[ \t]*\{?\\AktuelleAusgabe\b.*(?:\n|$)",
+    re.MULTILINE)
 
 
 def melde(art, text):
@@ -227,10 +232,24 @@ def finde_ausgaben(quelle, blatt):
 # ---------------------------------------------------------------------
 #  Setzen und Bilder
 # ---------------------------------------------------------------------
+def praeambel(haupt):
+    """Alles vor \\begin{document} aus main.tex, ohne Festlegung von \\AktuelleAusgabe."""
+    treffer = re.search(r"^[^%\n]*?\\begin\{document\}", haupt, re.MULTILINE)
+    if not treffer:
+        raise RuntimeError("In main.tex fehlt \\begin{document}.")
+    return AKTUELLE_AUSGABE.sub("", haupt[:treffer.end() - len("\\begin{document}")])
+
+
+def hauptdatei_fuer(haupt, pfad):
+    """Eigene Hauptdatei für genau eine Ausgabe: Präambel aus main.tex plus Dokumentteil."""
+    return (praeambel(haupt) + "\\newcommand{\\AktuelleAusgabe}{" + pfad + "}\n"
+            "\\begin{document}\n\\input{\\AktuelleAusgabe}\n\\end{document}\n")
+
+
 def eingabe_stand(quelle, ausgabe):
     """Prüfsumme über alles, was das Aussehen einer Ausgabe beeinflusst."""
     summe = hashlib.sha256(SKRIPT_STAND.encode())
-    haupt = AKTUELLE_AUSGABE.sub("", (quelle / "main.tex").read_text(encoding="utf-8"))
+    haupt = praeambel((quelle / "main.tex").read_text(encoding="utf-8"))
     summe.update(haupt.encode("utf-8"))
     dateien = sorted(quelle.glob("*.sty")) + [ausgabe.datei]
     bilder = quelle / "bilder"
@@ -253,10 +272,7 @@ def setze(quelle, ausgabe, arbeit):
         shutil.copytree(quelle, projekt, ignore=shutil.ignore_patterns(".git"))
     haupt = (projekt / "main.tex").read_text(encoding="utf-8")
     pfad = ausgabe.datei.relative_to(quelle).with_suffix("").as_posix()
-    neu, anzahl = AKTUELLE_AUSGABE.subn(
-        lambda m: "\\newcommand{\\AktuelleAusgabe}{" + pfad + "}", haupt)
-    if anzahl != 1:
-        raise RuntimeError("In main.tex fehlt die Zeile \\newcommand{\\AktuelleAusgabe}{...}.")
+    neu = hauptdatei_fuer(haupt, pfad)
     jobname = Path(ausgabe.pdf_name).stem
     tex = projekt / f"_{jobname}.tex"
     tex.write_text(neu, encoding="utf-8")
@@ -324,7 +340,10 @@ def bereite_vor(quelle, ausgabe, cache, arbeit):
         return ablage, False
 
     print(f"Nr. {ausgabe.nummer}: wird gesetzt ...", flush=True)
-    pdf, rueckgabe, fehler = setze(quelle, ausgabe, arbeit)
+    try:
+        pdf, rueckgabe, fehler = setze(quelle, ausgabe, arbeit)
+    except (subprocess.SubprocessError, OSError, RuntimeError) as problem:
+        pdf, rueckgabe, fehler = None, 1, [str(problem)]
     auszug = " | ".join(fehler[:3])
     if pdf is None:
         melde("error", f"Nr. {ausgabe.nummer} ({ausgabe.datei.name}): Setzen fehlgeschlagen. {auszug}")
@@ -567,6 +586,10 @@ def main():
     (ziel / "index.html").write_text(startseite(blatt, veroeffentlicht, basis_url, robots),
                                      encoding="utf-8")
 
+    if ausgaben and not veroeffentlicht:
+        melde("error", "Keine einzige freigegebene Ausgabe ließ sich setzen. "
+                       "Es wird nichts veröffentlicht, die bisherige Seite bleibt online.")
+        return 1
     liste = ", ".join(f"Nr. {a.nummer}" for a in veroeffentlicht) or "keine"
     print(f"Fertig. Veröffentlicht: {liste}.", flush=True)
     return 3 if fehler else 0
