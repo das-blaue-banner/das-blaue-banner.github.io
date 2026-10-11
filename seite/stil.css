@@ -1,0 +1,446 @@
+/* =====================================================================
+   Das Blaue Banner -- Archivseite
+   Pergament, Allianzblau und Gold wie im gedruckten Blatt.
+   Aufbau: ein gerahmtes "Blatt" mit Zeitungskopf, darunter die neueste
+   Ausgabe gross, danach alle frueheren Ausgaben als Raster.
+   ===================================================================== */
+
+@font-face {
+  font-family: "IM Fell English";
+  src: url("schriften/IMFellEnglish-Regular.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "IM Fell English";
+  src: url("schriften/IMFellEnglish-Italic.woff2") format("woff2");
+  font-weight: 400; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: "Cinzel";
+  src: url("schriften/Cinzel-Regular.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Cinzel";
+  src: url("schriften/Cinzel-Bold.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
+:root {
+  --pergament: #e9dcc0;
+  --tinte: #2b2118;
+  --tinte-blass: #5b4a37;
+  --blau: #1b3f8b;
+  --nachtblau: #0f2350;
+  --gold: #c9a13b;
+  --hellgold: #e8c872;
+  --dunkelgold: #8c6d1f;
+  --goldschrift: #6e5412;   /* dunkler, damit kleine Schrift auf Pergament lesbar bleibt */
+  --schatten: rgba(43, 33, 24, 0.45);
+
+  --schrift-text: "IM Fell English", "EB Garamond", Garamond, "Times New Roman", serif;
+  --schrift-zier: "Cinzel", "Trajan Pro", "Times New Roman", serif;
+
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  background: var(--pergament);
+  color: var(--tinte);
+}
+
+body {
+  margin: 0;
+  font-family: var(--schrift-text);
+  font-size: 1.15rem;
+  line-height: 1.55;
+  color: var(--tinte);
+}
+
+/* Pergament liegt fest hinter allem, auch auf dem Handy */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--pergament) url("bilder/pergament.jpg") center / cover no-repeat;
+}
+
+img { max-width: 100%; height: auto; }
+
+a { color: var(--blau); text-underline-offset: 0.15em; }
+a:hover { color: var(--nachtblau); }
+a:focus-visible, .knopf:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+/* ---------------------------------------------------------------------
+   Das Blatt mit Doppelrahmen und Eckranken
+   --------------------------------------------------------------------- */
+.blatt {
+  position: relative;
+  max-width: 74rem;
+  margin: clamp(0.5rem, 3vw, 2rem) auto;
+  padding-block: clamp(1.5rem, 4vw, 3rem);
+  padding-inline: clamp(1rem, 4.5vw, 3.75rem);
+  border: 2px solid var(--blau);
+  outline: 1px solid var(--dunkelgold);
+  outline-offset: -7px;
+}
+
+.ecke {
+  position: absolute;
+  width: clamp(2.2rem, 6vw, 3.6rem);
+  pointer-events: none;
+}
+.ecke-ol { top: 10px; left: 10px; }
+.ecke-or { top: 10px; right: 10px; transform: scaleX(-1); }
+.ecke-ul { bottom: 10px; left: 10px; transform: scaleY(-1); }
+.ecke-ur { bottom: 10px; right: 10px; transform: scale(-1, -1); }
+
+/* ---------------------------------------------------------------------
+   Zeitungskopf
+   --------------------------------------------------------------------- */
+.kopf {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(1rem, 3vw, 2rem);
+  padding-top: clamp(0.5rem, 2vw, 1rem);
+}
+
+.kopf-wappen { width: clamp(4.5rem, 11vw, 8.5rem); }
+
+.kopf-mitte { text-align: center; min-width: 0; }
+
+.kopf-titel { margin: 0; line-height: 0; }
+.kopf-titel a { display: block; }
+.kopf-titel img { width: min(100%, 40rem); }
+
+.kopf-untertitel {
+  margin: 0.6rem 0 0;
+  font-family: var(--schrift-zier);
+  font-size: clamp(0.75rem, 1.8vw, 1rem);
+  letter-spacing: 0.06em;
+  color: var(--nachtblau);
+  text-wrap: balance;
+}
+.kopf-untertitel img { width: 1.1em; vertical-align: -0.15em; margin-inline: 0.5em; }
+
+/* Haengendes Banner rechts, wie im gedruckten Kopf */
+.kopf-banner {
+  position: relative;
+  width: clamp(6rem, 11vw, 8rem);
+  padding-top: 0.55rem;
+}
+.kopf-banner::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -0.5rem;
+  right: -0.5rem;
+  height: 0.3rem;
+  border-radius: 0.2rem;
+  background: var(--dunkelgold);
+}
+.kopf-banner-rand {
+  padding: 2px;
+  background: var(--gold);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 87%, 0 100%);
+}
+.kopf-banner-tuch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.8rem 0.4rem 1.6rem;
+  background: var(--blau);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 87%, 0 100%);
+  color: var(--hellgold);
+  font-family: var(--schrift-zier);
+  font-size: 0.72rem;
+  line-height: 1.25;
+  letter-spacing: 0.05em;
+  text-align: center;
+  text-transform: uppercase;
+}
+.kopf-banner-tuch img { width: 2.4rem; }
+
+/* Leiste unter dem Kopf mit doppelter Linie oben und unten */
+.leiste {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  margin-top: clamp(1rem, 2.5vw, 1.5rem);
+  padding: 0.65rem 0;
+  border-block: 2px solid var(--blau);
+  background:
+    linear-gradient(var(--dunkelgold), var(--dunkelgold)) left 0 top 3px / 100% 1px no-repeat,
+    linear-gradient(var(--dunkelgold), var(--dunkelgold)) left 0 bottom 3px / 100% 1px no-repeat;
+  font-family: var(--schrift-zier);
+  font-size: clamp(0.7rem, 1.6vw, 0.88rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.leiste img { width: 0.9rem; }
+
+/* ---------------------------------------------------------------------
+   Wimpelband als Abschnittsueberschrift (wie die Rubriken im Blatt)
+   --------------------------------------------------------------------- */
+.band {
+  display: flex;
+  justify-content: center;
+  margin: clamp(2rem, 5vw, 3rem) 0 clamp(1.25rem, 3vw, 2rem);
+  font-family: var(--schrift-zier);
+  font-weight: 700;
+  font-size: clamp(0.85rem, 2.2vw, 1.05rem);
+  line-height: 1;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  filter:
+    drop-shadow(1px 0 0 var(--gold)) drop-shadow(-1px 0 0 var(--gold))
+    drop-shadow(0 1px 0 var(--gold)) drop-shadow(0 -1px 0 var(--gold));
+}
+.band span {
+  padding: 0.6em 2.8em;
+  background: var(--blau);
+  color: var(--hellgold);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 1.1em) 50%, 100% 100%, 0 100%, 1.1em 50%);
+}
+
+/* ---------------------------------------------------------------------
+   Einleitung, Zeilen und Knoepfe
+   --------------------------------------------------------------------- */
+.einleitung {
+  max-width: 40rem;
+  margin: clamp(1.5rem, 4vw, 2.25rem) auto 0;
+  text-align: center;
+  font-style: italic;
+  font-size: 1.2rem;
+  text-wrap: balance;
+}
+
+.dachzeile {
+  margin: 0;
+  font-family: var(--schrift-zier);
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--goldschrift);
+}
+
+.schlagzeile {
+  margin: 0.35rem 0 0;
+  font-family: var(--schrift-zier);
+  font-weight: 700;
+  font-size: clamp(1.6rem, 4.2vw, 2.7rem);
+  line-height: 1.15;
+  color: var(--blau);
+  text-wrap: balance;
+}
+.schlagzeile a { color: inherit; text-decoration: none; }
+.schlagzeile a:hover { text-decoration: underline; text-decoration-thickness: 1px; }
+
+.unterzeile {
+  margin: 0.8rem 0 0;
+  font-style: italic;
+  font-size: clamp(1.15rem, 2.4vw, 1.35rem);
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+
+.knoepfe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 1.6rem;
+}
+
+.knopf {
+  display: inline-block;
+  padding: 0.75em 1.5em;
+  border: 1px solid var(--gold);
+  background: var(--blau);
+  box-shadow: inset 0 0 0 2px var(--blau), inset 0 0 0 3px var(--hellgold);
+  color: var(--hellgold);
+  font-family: var(--schrift-zier);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.knopf:hover { background: var(--nachtblau); color: var(--hellgold); }
+
+.knopf-zweit {
+  background: transparent;
+  border-color: var(--blau);
+  box-shadow: none;
+  color: var(--blau);
+}
+.knopf-zweit:hover { background: rgba(27, 63, 139, 0.08); color: var(--nachtblau); }
+
+/* ---------------------------------------------------------------------
+   Seiten wie Papier auf dem Tisch
+   --------------------------------------------------------------------- */
+.papier {
+  display: block;
+  border: 1px solid rgba(140, 109, 31, 0.45);
+  box-shadow: 0 1px 2px var(--schatten), 0 14px 28px -12px var(--schatten);
+}
+
+/* Neueste Ausgabe */
+.neueste {
+  display: grid;
+  grid-template-columns: minmax(0, 21rem) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(1.5rem, 5vw, 3.5rem);
+}
+.neueste-bild { display: block; transform: rotate(-1.2deg); transition: transform 0.25s ease; }
+.neueste-bild:hover { transform: rotate(0deg) translateY(-3px); }
+.neueste-text { min-width: 0; }
+
+/* Fruehere Ausgaben */
+.archiv {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+  gap: clamp(1.25rem, 3vw, 2rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.karte { display: grid; gap: 0.7rem; text-decoration: none; color: var(--tinte); }
+.karte img { transition: transform 0.2s ease; }
+.karte:hover img { transform: translateY(-3px); }
+.karte-nr {
+  font-family: var(--schrift-zier);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--goldschrift);
+}
+.karte-titel {
+  font-family: var(--schrift-zier);
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.25;
+  color: var(--blau);
+}
+.karte:hover .karte-titel { text-decoration: underline; text-decoration-thickness: 1px; }
+
+.leer {
+  margin: 0 auto;
+  max-width: 34rem;
+  text-align: center;
+  font-style: italic;
+}
+
+/* ---------------------------------------------------------------------
+   Leseansicht einer Ausgabe
+   --------------------------------------------------------------------- */
+.zurueck {
+  margin: clamp(1.25rem, 3vw, 1.75rem) 0 0;
+  font-family: var(--schrift-zier);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ausgabe-kopf {
+  max-width: 48rem;
+  margin: clamp(1.5rem, 4vw, 2.5rem) auto 0;
+  text-align: center;
+}
+.ausgabe-kopf .knoepfe { justify-content: center; }
+
+.seiten {
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 2.5rem);
+  max-width: 56rem;
+  margin: clamp(2rem, 5vw, 3rem) auto 0;
+}
+.seite { margin: 0; }
+.seite figcaption {
+  margin-top: 0.6rem;
+  text-align: center;
+  font-family: var(--schrift-zier);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tinte-blass);
+}
+
+.blaettern {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 56rem;
+  margin: clamp(2rem, 5vw, 3rem) auto 0;
+  font-family: var(--schrift-zier);
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+}
+.blaettern a { display: grid; gap: 0.2rem; max-width: 26rem; text-decoration: none; }
+.blaettern a:hover .blaettern-titel { text-decoration: underline; }
+.blaettern .weiter { margin-left: auto; text-align: right; }
+.blaettern-art {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--goldschrift);
+}
+.blaettern-titel { font-weight: 700; }
+
+/* ---------------------------------------------------------------------
+   Fuss
+   --------------------------------------------------------------------- */
+.fuss {
+  margin-top: clamp(2.5rem, 6vw, 4rem);
+  text-align: center;
+}
+.fuss-linie { width: min(100%, 26rem); }
+.fuss-feder {
+  margin: 1rem 0 0;
+  font-style: italic;
+  font-size: 1.15rem;
+}
+.fuss-feder img { width: 1.6rem; vertical-align: -0.3em; margin-left: 0.4rem; }
+.fuss-hinweis {
+  max-width: 40rem;
+  margin: 0.6rem auto 0;
+  font-size: 0.9rem;
+  color: var(--tinte-blass);
+  text-wrap: balance;
+}
+
+/* ---------------------------------------------------------------------
+   Schmale Bildschirme
+   --------------------------------------------------------------------- */
+@media (max-width: 46rem) {
+  .kopf { grid-template-columns: auto minmax(0, 1fr); }
+  .kopf-banner { display: none; }
+  .leiste { justify-content: center; text-align: center; }
+  .leiste img { display: none; }
+  .neueste { grid-template-columns: minmax(0, 1fr); }
+  .neueste-bild { max-width: 19rem; margin-inline: auto; }
+  .neueste-text { text-align: center; }
+  .neueste-text .knoepfe { justify-content: center; }
+}
+
+@media (max-width: 30rem) {
+  .kopf { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .kopf-wappen { width: 4.5rem; }
+  .ecke { width: 1.9rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neueste-bild, .karte img { transition: none; }
+  .neueste-bild:hover, .karte:hover img { transform: none; }
+  .neueste-bild { transform: none; }
+}

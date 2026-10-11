@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{seitentitel}}</title>
+<meta name="description" content="{{beschreibung}}">
+{{robots}}
+<meta name="theme-color" content="#1b3f8b">
+<link rel="icon" type="image/png" href="{{basis}}favicon.png">
+<link rel="apple-touch-icon" href="{{basis}}apple-touch-icon.png">
+<link rel="stylesheet" href="{{basis}}stil.css">
+{{og}}
+</head>
+<body>
+<div class="blatt">
+  <img class="ecke ecke-ol" src="{{basis}}bilder/ecke.svg" alt="">
+  <img class="ecke ecke-or" src="{{basis}}bilder/ecke.svg" alt="">
+  <img class="ecke ecke-ul" src="{{basis}}bilder/ecke.svg" alt="">
+  <img class="ecke ecke-ur" src="{{basis}}bilder/ecke.svg" alt="">
+
+  <header class="kopf">
+    <img class="kopf-wappen" src="{{basis}}bilder/wappen.png" alt="" width="360" height="360">
+    <div class="kopf-mitte">
+      <{{titel_tag}} class="kopf-titel"><a href="{{basis}}"><img src="{{basis}}bilder/titel.svg" alt="{{blattname}}" width="640" height="68"></a></{{titel_tag}}>
+      <p class="kopf-untertitel"><img src="{{basis}}bilder/schwerter.svg" alt="">{{untertitel}}<img src="{{basis}}bilder/schwerter.svg" alt=""></p>
+    </div>
+    <div class="kopf-banner" aria-hidden="true">
+      <div class="kopf-banner-rand">
+        <div class="kopf-banner-tuch">
+          <img src="{{basis}}bilder/krone.svg" alt="">
+          <span>Für König<br>und Allianz</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="leiste">
+    <span>{{ort}} · {{server}}</span>
+    <img src="{{basis}}bilder/lilie.svg" alt="">
+    <span>{{leiste_mitte}}</span>
+    <img src="{{basis}}bilder/lilie.svg" alt="">
+    <span>Erscheint wöchentlich</span>
+  </div>
+
+  <main>
+{{inhalt}}
+  </main>
+
+  <footer class="fuss">
+    <img class="fuss-linie" src="{{basis}}bilder/zierlinie.svg" alt="">
+    <p class="fuss-feder">Alle Beiträge aus der Feder von {{redaktion}}<img src="{{basis}}bilder/feder.svg" alt=""></p>
+    <p class="fuss-hinweis">Ein Fanprojekt für die Allianz auf {{server}}. World of Warcraft ist eine Marke von Blizzard Entertainment; dieses Blatt steht in keiner Verbindung zu Blizzard.</p>
+  </footer>
+</div>
+</body>
+</html>

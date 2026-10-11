@@ -1,0 +1,134 @@
+# Holt das Blatt aus Overleaf, setzt alle freigegebenen Ausgaben und
+# veröffentlicht die Archivseite auf GitHub Pages.
+name: Blatt veröffentlichen
+
+on:
+  schedule:
+    - cron: "23 * * * *"   # stündlich nachsehen, ob sich in Overleaf etwas getan hat
+  workflow_dispatch:        # von Hand: Actions → Blatt veröffentlichen → Run workflow
+  push:
+    branches: [main]
+
+permissions:
+  contents: write           # um den veröffentlichten Overleaf-Stand zu merken
+  pages: write
+  id-token: write
+
+concurrency:
+  group: blatt
+  cancel-in-progress: false
+
+env:
+  OVERLEAF_PROJEKT: 64f327f1417e0b3d5bd1bc4e
+
+jobs:
+  pruefen:
+    name: Overleaf prüfen
+    runs-on: ubuntu-latest
+    outputs:
+      bauen: ${{ steps.vergleich.outputs.bauen }}
+      stand: ${{ steps.vergleich.outputs.stand }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stand in Overleaf mit dem zuletzt veröffentlichten vergleichen
+        id: vergleich
+        env:
+          OVERLEAF_TOKEN: ${{ secrets.OVERLEAF_TOKEN }}
+        run: |
+          if [ -z "$OVERLEAF_TOKEN" ]; then
+            echo "::error::Das Secret OVERLEAF_TOKEN fehlt (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+          stand=$(git ls-remote "https://git:${OVERLEAF_TOKEN}@git.overleaf.com/${OVERLEAF_PROJEKT}" HEAD | cut -f1)
+          if [ -z "$stand" ]; then
+            echo "::error::Overleaf hat nicht geantwortet oder das Token ist ungültig."
+            exit 1
+          fi
+          zuletzt=$(cat overleaf-stand.txt 2>/dev/null || true)
+          echo "stand=$stand" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_EVENT_NAME" != "schedule" ] || [ "$stand" != "$zuletzt" ]; then
+            echo "bauen=true" >> "$GITHUB_OUTPUT"
+            echo "Overleaf-Stand ${stand:0:7}: Die Seite wird gebaut."
+          else
+            echo "bauen=false" >> "$GITHUB_OUTPUT"
+            echo "Keine Änderung in Overleaf seit ${zuletzt:0:7}."
+          fi
+
+  bauen:
+    name: Ausgaben setzen und Seite bauen
+    needs: pruefen
+    if: needs.pruefen.outputs.bauen == 'true'
+    runs-on: ubuntu-latest
+    container: texlive/texlive:latest
+    outputs:
+      fehler: ${{ steps.bau.outputs.fehler }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Overleaf-Projekt holen
+        env:
+          OVERLEAF_TOKEN: ${{ secrets.OVERLEAF_TOKEN }}
+        run: git clone --depth 1 "https://git:${OVERLEAF_TOKEN}@git.overleaf.com/${OVERLEAF_PROJEKT}" _quelle
+
+      - name: Bereits gesetzte Ausgaben laden
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: ausgaben-${{ github.run_id }}
+          restore-keys: ausgaben-
+
+      - name: Pages vorbereiten
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Seite bauen
+        id: bau
+        run: |
+          set +e
+          python3 werkzeuge/baue_seite.py --quelle _quelle --ziel _site --cache .cache \
+            --basis-url "${{ steps.pages.outputs.base_url }}" \
+            --suchmaschinen "${{ vars.SUCHMASCHINEN }}"
+          rc=$?
+          if [ "$rc" -eq 1 ]; then exit 1; fi
+          if [ "$rc" -eq 3 ]; then echo "fehler=ja" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  veroeffentlichen:
+    name: Auf GitHub Pages veröffentlichen
+    needs: [pruefen, bauen]
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Veröffentlichen
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - uses: actions/checkout@v4
+
+      - name: Veröffentlichten Overleaf-Stand merken
+        env:
+          STAND: ${{ needs.pruefen.outputs.stand }}
+        run: |
+          echo "$STAND" > overleaf-stand.txt
+          if [ -z "$(git status --porcelain -- overleaf-stand.txt)" ]; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add overleaf-stand.txt
+          git commit -m "Overleaf-Stand ${STAND:0:7} veröffentlicht"
+          git push
+
+  melden:
+    name: Fehler melden
+    needs: [bauen, veroeffentlichen]
+    if: needs.bauen.outputs.fehler == 'ja'
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo '::error::Mindestens eine Ausgabe hatte beim Setzen Fehler. Details stehen im Schritt "Seite bauen".'
+          exit 1
