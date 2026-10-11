@@ -24,10 +24,6 @@ spätestens eine Stunde später auf der Website.
 
 ## Einmalige Einrichtung
 
-Am einfachsten mit `werkzeuge/einrichten.sh` (braucht die GitHub-Kommandozeile
-`gh`): Es meldet bei GitHub an, legt das Repository an, fragt nach dem
-Overleaf-Token und schaltet Pages ein. Von Hand geht es so:
-
 1. **Secret anlegen**: Settings → Secrets and variables → Actions → New
    repository secret, Name `OVERLEAF_TOKEN`, Wert: ein Git-Token aus Overleaf
    (Account Settings → Git integration).
@@ -47,7 +43,6 @@ Overleaf-Token und schaltet Pages ein. Von Hand geht es so:
 ```
 .github/workflows/veroeffentlichen.yml   Ablauf auf GitHub (stündlich)
 werkzeuge/baue_seite.py                  baut die Seite aus dem Overleaf-Projekt
-werkzeuge/einrichten.sh                  einmalige Einrichtung auf GitHub
 werkzeuge/vorlagen/rahmen.html           Seitengerüst mit Kopf und Fuß
 seite/                                   Design, Schriften, Schmuckbilder
 ```
