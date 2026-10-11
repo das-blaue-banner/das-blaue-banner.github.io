@@ -29,7 +29,7 @@ jobs:
       bauen: ${{ steps.vergleich.outputs.bauen }}
       stand: ${{ steps.vergleich.outputs.stand }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Stand in Overleaf mit dem zuletzt veröffentlichten vergleichen
         id: vergleich
@@ -64,7 +64,7 @@ jobs:
     outputs:
       fehler: ${{ steps.bau.outputs.fehler }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Overleaf-Projekt holen
         env:
@@ -72,7 +72,7 @@ jobs:
         run: git clone --depth 1 "https://git:${OVERLEAF_TOKEN}@git.overleaf.com/${OVERLEAF_PROJEKT}" _quelle
 
       - name: Bereits gesetzte Ausgaben laden
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .cache
           key: ausgaben-${{ github.run_id }}
@@ -80,7 +80,7 @@ jobs:
 
       - name: Pages vorbereiten
         id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Seite bauen
         id: bau
@@ -93,7 +93,7 @@ jobs:
           if [ "$rc" -eq 1 ]; then exit 1; fi
           if [ "$rc" -eq 3 ]; then echo "fehler=ja" >> "$GITHUB_OUTPUT"; fi
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
@@ -107,9 +107,9 @@ jobs:
     steps:
       - name: Veröffentlichen
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Veröffentlichten Overleaf-Stand merken
         env:
